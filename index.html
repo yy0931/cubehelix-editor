@@ -9,18 +9,25 @@
         input[type='range'] {
             margin-left: 0;
             margin-right: 0;
+            margin-bottom: 0;
+        }
+        table {
+            border-collapse:separate; 
+            border-spacing: 0 0.5em;
+        }
+        td {
+            vertical-align: top;
         }
     </style>
 </head>
 <body>
-    <canvas id="canvas3" width="400" height="400"></canvas>
-    <canvas id="canvas" width="20" height="400"></canvas><br>
+    <canvas id="heatmapCanvas" width="400" height="400"></canvas>
+    <canvas id="colorbarCanvas" width="20" height="400"></canvas><br>
     <table id="table">
-        <tr><td>start</td><td><input type="number" step="0.01" id="start" style="width: 100px"></td><td><input type="range" id="range-start" min="0" max="3" step="0.01" value="0" style="width: 400px;" autocomplete="off"></td></tr>
-        <tr><td></td><td></td><td><canvas id="canvas2" width="400" height="10"></canvas></td></tr>
-        <tr><td>rot</td><td><input type="number" step="0.01" id="rot" style="width: 100px"></td><td><input type="range" id="range-rot" min="-2" step="0.01" max="2" value="0.4" style="width: 400px;" autocomplete="off"></td></tr>
-        <tr><td>gamma</td><td><input type="number" step="0.01" id="gamma" style="width: 100px"></td><td><input type="range" id="range-gamma" min="0" max="3" step="0.01" value="1.0" style="width: 400px;" autocomplete="off"></td></tr>
-        <tr><td>hue</td><td><input type="number" step="0.01" id="hue" style="width: 100px"></td><td><input type="range" id="range-hue" min="0" max="1" step="0.01" value="0.8" style="width: 400px;" autocomplete="off"></td></tr>
+        <tr><td>start</td><td><input type="number" step="0.01" id="start" style="width: 100px"></td><td style="position: relative;"><canvas id="startCanvas" width="400" height="20" style="margin-bottom: 10px"></canvas><input type="range" id="range-start" min="0" max="3" step="0.01" value="0" style="width: 400px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
+        <tr><td>rot</td><td><input type="number" step="0.01" id="rot" style="width: 100px"></td><td style="position: relative;"><canvas id="rotCanvas" width="400" height="50" style="margin-bottom: 10px"></canvas><input type="range" id="range-rot" min="-2" step="0.01" max="2" value="0.4" style="width: 400px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
+        <tr><td>gamma</td><td><input type="number" step="0.01" id="gamma" style="width: 100px"></td><td style="position: relative;"><canvas id="gammaCanvas" width="400" height="50" style="margin-bottom: 10px"></canvas><input type="range" id="range-gamma" min="0" max="3" step="0.01" value="1.0" style="width: 400px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
+        <tr><td>hue</td><td><input type="number" step="0.01" id="hue" style="width: 100px"></td><td style="position: relative;"><canvas id="hueCanvas" width="400" height="50" style="margin-bottom: 10px"></canvas><input type="range" id="range-hue" min="0" max="1" step="0.01" value="0.8" style="width: 400px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
         <tr><td>light</td><td><input type="number" step="0.01" id="light" style="width: 100px"></td><td><input type="range" id="range-light" min="0" max="1" step="0.01" value="0.85" style="width: 400px;" autocomplete="off"></td></tr>
         <tr><td>dark</td><td><input type="number" step="0.01" id="dark" style="width: 100px"></td><td><input type="range" id="range-dark" min="0" max="1" step="0.01" value="0.15" style="width: 400px;" autocomplete="off"></td></tr>
         <tr><td><label for="reverse">reverse</label></td><td><input type="checkbox" id="reverse" autocomplete="off"></td><td></td></tr>
@@ -58,51 +65,93 @@
             [0.027027027681469917, 0.06949806958436966, 0.11969111859798431, 0.17374517023563385, 0.18725869059562683, 0.24131274223327637, 0.33590734004974365, 0.3899613916873932, 0.4478764533996582, 0.44980695843696594, 0.5810810923576355, 0.6332046389579773],
         ]
 
-        const canvas = /** @type {HTMLCanvasElement} */(document.querySelector("#canvas"))
-        const ctx = canvas.getContext("2d")
-        const canvas2 = /** @type {HTMLCanvasElement} */(document.querySelector("#canvas2"))
-        const ctx2 = canvas2.getContext("2d")
-        const canvas3 = /** @type {HTMLCanvasElement} */(document.querySelector("#canvas3"))
-        const ctx3 = canvas3.getContext("2d")
+        const heatmapCanvas = /** @type {HTMLCanvasElement} */(document.querySelector("#heatmapCanvas"))
+        const heatmapCtx = heatmapCanvas.getContext("2d")
+        const colorbarCanvas = /** @type {HTMLCanvasElement} */(document.querySelector("#colorbarCanvas"))
+        const colorbarCtx = colorbarCanvas.getContext("2d")
+        const startCanvas = /** @type {HTMLCanvasElement} */(document.querySelector("#startCanvas"))
+        const startCtx = startCanvas.getContext("2d")
+        const gammaCanvas = /** @type {HTMLCanvasElement} */(document.querySelector("#gammaCanvas"))
+        const gammaCtx = gammaCanvas.getContext("2d")
+        const rotCanvas = /** @type {HTMLCanvasElement} */(document.querySelector("#rotCanvas"))
+        const rotCtx = rotCanvas.getContext("2d")
+        const hueCanvas = /** @type {HTMLCanvasElement} */(document.querySelector("#hueCanvas"))
+        const hueCtx = hueCanvas.getContext("2d")
 
+        const jobs = []
         const draw = () => {
+            for (const j of jobs) {
+                clearTimeout(j)
+            }
+            jobs.length = 0
+
+            const start = +document.querySelector("#start").value
             const rot = +document.querySelector("#rot").value
+            const gamma = +document.querySelector("#gamma").value
+            const hue = +document.querySelector("#hue").value
             const light = +document.querySelector("#light").value
             const dark = +document.querySelector("#dark").value
             const reverse = document.querySelector("#reverse").checked
-            const palette = cubehelix_palette(
-                +document.querySelector("#start").value,
-                rot,
-                +document.querySelector("#gamma").value,
-                +document.querySelector("#hue").value,
-                light,
-                dark,
-                reverse,
-            )
-            for (let y = 0; y < canvas.height; y++) {
-                ctx.strokeStyle = palette(1 - y / (canvas.height - 1))
-                ctx.beginPath()
-                ctx.moveTo(0, y)
-                ctx.lineTo(canvas.width, y)
-                ctx.stroke()
+            const palette = cubehelix_palette(start, rot, gamma, hue, light, dark, reverse)
+
+            for (let y = 0; y < colorbarCanvas.height; y++) {
+                colorbarCtx.strokeStyle = palette(1 - y / (colorbarCanvas.height - 1))
+                colorbarCtx.beginPath()
+                colorbarCtx.moveTo(0, y)
+                colorbarCtx.lineTo(colorbarCanvas.width, y)
+                colorbarCtx.stroke()
             }
 
-            for (let x = 0; x < canvas2.width; x++) {
-                ctx2.strokeStyle = cubehelix_palette(x / (canvas2.width - 1) * 3, rot, 1, 3, light, dark, reverse)(0.5)
-                ctx2.beginPath()
-                ctx2.moveTo(x, 0)
-                ctx2.lineTo(x, canvas2.height)
-                ctx2.stroke()
+            for (let x = 0; x < startCanvas.width; x++) {
+                startCtx.strokeStyle = cubehelix_palette(x / (startCanvas.width - 1) * 3, rot, 1, 3, light, dark, reverse)(0.5)
+                startCtx.beginPath()
+                startCtx.moveTo(x, 0)
+                startCtx.lineTo(x, startCanvas.height)
+                startCtx.stroke()
             }
 
-            const cellW = canvas3.width / flights[0].length
-            const cellH = canvas3.height / flights.length
+            const gammaInput = /** @type {HTMLInputElement} */(document.querySelector("#range-gamma"))
+            for (let x = 0; x < gammaCanvas.width; x++) {
+                jobs.push(setTimeout(() => {
+                    const gammaPalette = cubehelix_palette(start, hue, +gammaInput.min + (+gammaInput.max - +gammaInput.min) * (x / (gammaCanvas.width - 1)), hue, light, dark, reverse)
+                    for (let y = 0; y < gammaCanvas.height; y++) {
+                        gammaCtx.fillStyle = gammaPalette(1 - y / (gammaCanvas.height - 1))
+                        gammaCtx.fillRect(x, y, 1, 1)
+                    }
+                    gammaCtx.beginPath()
+                }, 0))
+            }
+
+            const rotInput = /** @type {HTMLInputElement} */(document.querySelector("#range-rot"))
+            for (let x = 0; x < rotCanvas.width; x++) {
+                jobs.push(setTimeout(() => {
+                    const rotPalette = cubehelix_palette(start, +rotInput.min + (+rotInput.max - +rotInput.min) * (x / (rotCanvas.width - 1)), gamma, hue, light, dark, reverse)
+                    for (let y = 0; y < rotCanvas.height; y++) {
+                        rotCtx.fillStyle = rotPalette(1 - y / (rotCanvas.height - 1))
+                        rotCtx.fillRect(x, y, 1, 1)
+                    }
+                    rotCtx.beginPath()
+                }, 0))
+            }
+
+            const hueInput = /** @type {HTMLInputElement} */(document.querySelector("#range-hue"))
+            for (let x = 0; x < hueCanvas.width; x++) {
+                jobs.push(setTimeout(() => {
+                    const huePalette = cubehelix_palette(start, rot, gamma, +hueInput.min + (+hueInput.max - +hueInput.min) * (x / (hueCanvas.width - 1)), light, dark, reverse)
+                    for (let y = 0; y < hueCanvas.height; y++) {
+                        hueCtx.fillStyle = huePalette(1 - y / (hueCanvas.height - 1))
+                        hueCtx.fillRect(x, y, 1, 1)
+                    }
+                    hueCtx.beginPath()
+                }, 0))
+            }
+
+            const cellW = heatmapCanvas.width / flights[0].length
+            const cellH = heatmapCanvas.height / flights.length
             for (let y = 0; y < flights.length; y++) {
                 for (let x = 0; x < flights[0].length; x++) {
-                    ctx3.fillStyle = palette(flights[y][x])
-                    ctx3.beginPath()
-                    ctx3.rect(cellW * x, cellH * y, cellW, cellH)
-                    ctx3.fill()
+                    heatmapCtx.fillStyle = palette(flights[y][x])
+                    heatmapCtx.fillRect(cellW * x, cellH * y, cellW, cellH)
                 }
             }
         }
