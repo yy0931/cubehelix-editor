@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cubehelix Editor</title>
+</head>
+<body>
+    <canvas id="canvas" width="400" height="40"></canvas><br>
+    <table id="table">
+        <tr><td>start</td><td><input type="number" step="0.01" id="start" style="width: 100px"></td><td><input type="range" id="range-start" min="0" max="3" step="0.01" value="0" style="width: 400px;" autocomplete="off"></td></tr>
+        <tr><td>rot</td><td><input type="number" step="0.01" id="rot" style="width: 100px"></td><td><input type="range" id="range-rot" min="-2" step="0.01" max="2" value="0.4" style="width: 400px;" autocomplete="off"></td></tr>
+        <tr><td>gamma</td><td><input type="number" step="0.01" id="gamma" style="width: 100px"></td><td><input type="range" id="range-gamma" min="0" max="3" step="0.01" value="1.0" style="width: 400px;" autocomplete="off"></td></tr>
+        <tr><td>hue</td><td><input type="number" step="0.01" id="hue" style="width: 100px"></td><td><input type="range" id="range-hue" min="0" max="1" step="0.01" value="0.8" style="width: 400px;" autocomplete="off"></td></tr>
+        <tr><td>light</td><td><input type="number" step="0.01" id="light" style="width: 100px"></td><td><input type="range" id="range-light" min="0" max="1" step="0.01" value="0.85" style="width: 400px;" autocomplete="off"></td></tr>
+        <tr><td>dark</td><td><input type="number" step="0.01" id="dark" style="width: 100px"></td><td><input type="range" id="range-dark" min="0" max="1" step="0.01" value="0.15" style="width: 400px;" autocomplete="off"></td></tr>
+        <tr><td><label for="reverse">reverse</label></td><td><input type="checkbox" id="reverse" autocomplete="off"></td><td></td></tr>
+    </table>
+    <script>
+        /**
+         * Copied from seaborn: https://github.com/mwaskom/seaborn/blob/bfbd6ad5b9717db42e302177d867b4a273df162b/seaborn/palettes.py#L905
+         * Copyright (c) 2012-2021, Michael L. Waskom
+         * BSD 3-Clause "New" or "Revised" License
+         */
+        const cubehelix_palette = (start=0, rot=.4, gamma=1.0, hue=0.8) => {
+            const get_color_function = (/** @type {number} */p0, /** @type {number} */p1) => (/** @type {number} */x) => {
+                xg = x ** gamma
+                a = hue * xg * (1 - xg) / 2
+                phi = 2 * Math.PI * (start / 3 + rot * x)
+                return xg + a * (p0 * Math.cos(phi) + p1 * Math.sin(phi))
+            }
+
+            return {
+                red: get_color_function(-0.14861, 1.78277),
+                green: get_color_function(-0.29227, -0.90649),
+                blue: get_color_function(1.97294, 0.0),
+            }
+        }
+
+        const canvas = /** @type {HTMLCanvasElement} */(document.querySelector("#canvas"))
+        const ctx = canvas.getContext("2d")
+
+        const draw = () => {
+            const palette = cubehelix_palette(
+                +document.querySelector("#start").value,
+                +document.querySelector("#rot").value,
+                +document.querySelector("#gamma").value,
+                +document.querySelector("#hue").value,
+            )
+            const dark = +document.querySelector("#dark").value
+            const light = +document.querySelector("#light").value
+            const reverse = document.querySelector("#reverse").checked
+            for (let x = 0; x < canvas.width; x++) {
+                let t = (reverse ? (canvas.width - 1 - x) : x) / (canvas.width - 1)
+                t = dark + (light - dark) * t
+                ctx.strokeStyle = `rgb(${palette.red(t) * 255}, ${palette.green(t) * 255}, ${palette.blue(t) * 255})`
+                ctx.beginPath()
+                ctx.moveTo(x, 0)
+                ctx.lineTo(x, canvas.height)
+                ctx.stroke()
+            }
+        }
+
+        document.querySelectorAll("#table input[type='range']").forEach((e) => {
+            const update = () => {
+                document.getElementById(e.id.replace("range-", "")).value = "" + e.value
+                draw()
+            }
+            update()
+            e.addEventListener("input", () => { update() })
+        })
+        document.querySelectorAll("#table input[type='number']").forEach((e) => e.addEventListener("input", () => { draw() }))
+        document.querySelector("#reverse").addEventListener("change", () => { draw() })
+    </script>
+</body>
+</html>
