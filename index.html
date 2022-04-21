@@ -5,11 +5,18 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cubehelix Editor</title>
+    <style>
+        input[type='range'] {
+            margin-left: 0;
+            margin-right: 0;
+        }
+    </style>
 </head>
 <body>
     <canvas id="canvas" width="400" height="40"></canvas><br>
     <table id="table">
         <tr><td>start</td><td><input type="number" step="0.01" id="start" style="width: 100px"></td><td><input type="range" id="range-start" min="0" max="3" step="0.01" value="0" style="width: 400px;" autocomplete="off"></td></tr>
+        <tr><td></td><td></td><td><canvas id="canvas2" width="400" height="10"></canvas></td></tr>
         <tr><td>rot</td><td><input type="number" step="0.01" id="rot" style="width: 100px"></td><td><input type="range" id="range-rot" min="-2" step="0.01" max="2" value="0.4" style="width: 400px;" autocomplete="off"></td></tr>
         <tr><td>gamma</td><td><input type="number" step="0.01" id="gamma" style="width: 100px"></td><td><input type="range" id="range-gamma" min="0" max="3" step="0.01" value="1.0" style="width: 400px;" autocomplete="off"></td></tr>
         <tr><td>hue</td><td><input type="number" step="0.01" id="hue" style="width: 100px"></td><td><input type="range" id="range-hue" min="0" max="1" step="0.01" value="0.8" style="width: 400px;" autocomplete="off"></td></tr>
@@ -40,11 +47,14 @@
 
         const canvas = /** @type {HTMLCanvasElement} */(document.querySelector("#canvas"))
         const ctx = canvas.getContext("2d")
+        const canvas2 = /** @type {HTMLCanvasElement} */(document.querySelector("#canvas2"))
+        const ctx2 = canvas2.getContext("2d")
 
         const draw = () => {
+            const rot = +document.querySelector("#rot").value
             const palette = cubehelix_palette(
                 +document.querySelector("#start").value,
-                +document.querySelector("#rot").value,
+                rot,
                 +document.querySelector("#gamma").value,
                 +document.querySelector("#hue").value,
             )
@@ -59,6 +69,15 @@
                 ctx.moveTo(x, 0)
                 ctx.lineTo(x, canvas.height)
                 ctx.stroke()
+            }
+
+            for (let x = 0; x < canvas2.width; x++) {
+                const palette = cubehelix_palette(x / (canvas2.width - 1) * 3, rot, 1, 3)
+                ctx2.strokeStyle = `rgb(${palette.red(0.5) * 255}, ${palette.green(0.5) * 255}, ${palette.blue(0.5) * 255})`
+                ctx2.beginPath()
+                ctx2.moveTo(x, 0)
+                ctx2.lineTo(x, canvas2.height)
+                ctx2.stroke()
             }
         }
 
