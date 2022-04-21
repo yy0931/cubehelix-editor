@@ -21,17 +21,21 @@
     </style>
 </head>
 <body>
-    <canvas id="heatmapCanvas" width="400" height="400"></canvas>
-    <canvas id="colorbarCanvas" width="20" height="400"></canvas><br>
-    <table id="table">
-        <tr><td>start</td><td><input type="number" step="0.01" id="start" style="width: 100px"></td><td style="position: relative;"><canvas id="startCanvas" width="400" height="20" style="margin-bottom: 10px"></canvas><input type="range" id="range-start" min="0" max="3" step="0.01" value="0" style="width: 400px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
-        <tr><td>rot</td><td><input type="number" step="0.01" id="rot" style="width: 100px"></td><td style="position: relative;"><canvas id="rotCanvas" width="400" height="50" style="margin-bottom: 10px"></canvas><input type="range" id="range-rot" min="-2" step="0.01" max="2" value="0.4" style="width: 400px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
-        <tr><td>gamma</td><td><input type="number" step="0.01" id="gamma" style="width: 100px"></td><td style="position: relative;"><canvas id="gammaCanvas" width="400" height="50" style="margin-bottom: 10px"></canvas><input type="range" id="range-gamma" min="0" max="3" step="0.01" value="1.0" style="width: 400px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
-        <tr><td>hue</td><td><input type="number" step="0.01" id="hue" style="width: 100px"></td><td style="position: relative;"><canvas id="hueCanvas" width="400" height="50" style="margin-bottom: 10px"></canvas><input type="range" id="range-hue" min="0" max="1" step="0.01" value="0.8" style="width: 400px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
-        <tr><td>light</td><td><input type="number" step="0.01" id="light" style="width: 100px"></td><td><input type="range" id="range-light" min="0" max="1" step="0.01" value="0.85" style="width: 400px;" autocomplete="off"></td></tr>
-        <tr><td>dark</td><td><input type="number" step="0.01" id="dark" style="width: 100px"></td><td><input type="range" id="range-dark" min="0" max="1" step="0.01" value="0.15" style="width: 400px;" autocomplete="off"></td></tr>
-        <tr><td><label for="reverse">reverse</label></td><td><input type="checkbox" id="reverse" autocomplete="off"></td><td></td></tr>
-    </table>
+    <div style="text-align: center;">
+        <div style="white-space: nowrap; display: inline-block; vertical-align: top;">
+            <canvas id="heatmapCanvas" width="200" height="200"></canvas>
+            <canvas id="colorbarCanvas" width="20" height="200"></canvas><br>
+        </div>
+        <table id="table" style="display: inline-block;">
+            <tr><td>start</td><td><input type="number" step="0.01" id="start" style="width: 100px"></td><td style="position: relative;"><canvas id="startCanvas" width="250" height="20" style="margin-bottom: 10px"></canvas><input type="range" id="range-start" min="0" max="3" step="0.01" value="0" style="width: 250px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
+            <tr><td>rot</td><td><input type="number" step="0.01" id="rot" style="width: 100px"></td><td style="position: relative;"><canvas id="rotCanvas" width="250" height="50" style="margin-bottom: 10px"></canvas><input type="range" id="range-rot" min="-2" step="0.01" max="2" value="0.4" style="width: 250px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
+            <tr><td>gamma</td><td><input type="number" step="0.01" id="gamma" style="width: 100px"></td><td style="position: relative;"><canvas id="gammaCanvas" width="250" height="50" style="margin-bottom: 10px"></canvas><input type="range" id="range-gamma" min="0" max="3" step="0.01" value="1.0" style="width: 250px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
+            <tr><td>hue</td><td><input type="number" step="0.01" id="hue" style="width: 100px"></td><td style="position: relative;"><canvas id="hueCanvas" width="250" height="50" style="margin-bottom: 10px"></canvas><input type="range" id="range-hue" min="0" max="1" step="0.01" value="0.8" style="width: 250px; position: absolute; left: 0px; bottom: 0px;" autocomplete="off"></td></tr>
+            <tr><td>light</td><td><input type="number" step="0.01" id="light" style="width: 100px"></td><td><input type="range" id="range-light" min="0" max="1" step="0.01" value="0.85" style="width: 250px;" autocomplete="off"></td></tr>
+            <tr><td>dark</td><td><input type="number" step="0.01" id="dark" style="width: 100px"></td><td><input type="range" id="range-dark" min="0" max="1" step="0.01" value="0.15" style="width: 250px;" autocomplete="off"></td></tr>
+            <tr><td><label for="reverse">reverse</label></td><td><input type="checkbox" id="reverse" autocomplete="off"></td><td></td></tr>
+        </table>
+    </div>
     <script>
         /**
          * Copied from seaborn: https://github.com/mwaskom/seaborn/blob/bfbd6ad5b9717db42e302177d867b4a273df162b/seaborn/palettes.py#L905
